@@ -1748,9 +1748,15 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
+      factories: [],
       showNewFactoryDialog: false,
       newFactoryName: '',
       newFactoryRange: {
@@ -1760,14 +1766,78 @@ __webpack_require__.r(__webpack_exports__);
     };
   },
   mounted: function mounted() {
+    var _this = this;
+
     console.log('app mounted.');
+    axios.get('/factory').then(function (response) {
+      _this.factories = response.data;
+    })["catch"](function (error) {
+      _this.$q.notify({
+        color: 'negative',
+        textColor: 'white',
+        icon: 'warning',
+        position: 'top',
+        message: 'There was an error retrieving factories'
+      });
+    });
   },
   methods: {
-    saveFactory: function saveFactory() {},
+    saveFactory: function saveFactory() {
+      var _this2 = this;
+
+      axios.post('/factory', {
+        name: this.newFactoryName,
+        rangeMin: this.newFactoryRange.min,
+        rangeMax: this.newFactoryRange.max
+      }).then(function (response) {
+        _this2.factories.push(response.data);
+
+        _this2.showNewFactoryDialog = false;
+
+        _this2.$q.notify({
+          color: 'positive',
+          textColor: 'white',
+          icon: 'check_circle',
+          position: 'top',
+          message: 'Factory successfully saved'
+        });
+      })["catch"](function (error) {
+        _this2.$q.notify({
+          color: 'negative',
+          textColor: 'white',
+          icon: 'warning',
+          position: 'top',
+          message: 'There was an error creating factory.'
+        });
+      });
+    },
     cancelFactory: function cancelFactory() {
       this.newFactoryName = '';
       this.newFactoryRange.min = 0;
       this.newFactoryRange.max = 1000;
+    },
+    factoryUpdate: function factoryUpdate(factory) {
+      var index = this.factories.findIndex(function (item) {
+        return item.id === factory.id;
+      });
+      var updateFactory = this.factories[index];
+      updateFactory.name = factory.name;
+      updateFactory.lower_bound = factory.lower_bound;
+      updateFactory.upper_bound = factory.upper_bound;
+    },
+    factoryDelete: function factoryDelete(factory) {
+      var index = this.factories.findIndex(function (item) {
+        return item.id === factory.id;
+      });
+      this.$delete(this.factories, index);
+    },
+    factoryChildren: function factoryChildren(data) {
+      var factory = data.factory;
+      var children = data.children;
+      var index = this.factories.findIndex(function (item) {
+        return item.id === factory.id;
+      });
+      this.factories[index].children = children;
     }
   }
 });
@@ -1791,7 +1861,9 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-/* harmony default export */ __webpack_exports__["default"] = ({});
+/* harmony default export */ __webpack_exports__["default"] = ({
+  props: ['child']
+});
 
 /***/ }),
 
@@ -1813,7 +1885,186 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-/* harmony default export */ __webpack_exports__["default"] = ({});
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+/* harmony default export */ __webpack_exports__["default"] = ({
+  props: ['factory'],
+  data: function data() {
+    return {
+      newFactoryName: this.factory.name,
+      newFactoryRange: {
+        min: this.factory.lower_bound,
+        max: this.factory.upper_bound
+      },
+      showFactoryEdit: false
+    };
+  },
+  computed: {
+    children: function children() {
+      return this.factory.children;
+    },
+    generateText: function generateText() {
+      if (this.children.length > 0) {
+        return 'Regenerate Children';
+      }
+
+      return 'Generate Children';
+    }
+  },
+  methods: {
+    saveFactory: function saveFactory() {
+      var _this = this;
+
+      axios.put(/factory/ + this.factory.id, {
+        name: this.newFactoryName,
+        rangeMin: this.newFactoryRange.min,
+        rangeMax: this.newFactoryRange.max
+      }).then(function (response) {
+        _this.$emit('factoryUpdate', response.data);
+
+        _this.showFactoryEdit = false;
+
+        _this.$q.notify({
+          color: 'positive',
+          textColor: 'white',
+          icon: 'check_circle',
+          position: 'top',
+          message: 'Factory successfully saved'
+        });
+      })["catch"](function (error) {
+        _this.$q.notify({
+          color: 'negative',
+          textColor: 'white',
+          icon: 'warning',
+          position: 'top',
+          message: 'There was an error updating factory.'
+        });
+      });
+    },
+    cancelFactory: function cancelFactory() {
+      this.newFactoryName = this.factory.name;
+      this.newFactoryRange.min = this.factory.lower_bound;
+      this.newFactoryRange.max = this.factory.upper_bound;
+    },
+    deleteFactory: function deleteFactory() {
+      var _this2 = this;
+
+      this.$q.dialog({
+        title: 'Delete Factory',
+        message: 'Are you sure you wish to delete this factory?',
+        cancel: true
+      }).onOk(function () {
+        axios["delete"]('/factory/' + _this2.factory.id).then(function (response) {
+          _this2.$emit('factoryDelete', response.data);
+
+          _this2.$q.notify({
+            color: 'positive',
+            textColor: 'white',
+            icon: 'check_circle',
+            position: 'top',
+            message: 'Factory successfully saved'
+          });
+        })["catch"](function (error) {
+          _this2.$q.notify({
+            color: 'negative',
+            textColor: 'white',
+            icon: 'warning',
+            position: 'top',
+            message: 'There was an error updating factory.'
+          });
+        });
+      }).onCancel(function () {// Nothing on cancel
+      });
+    },
+    generateChildren: function generateChildren() {
+      var _this3 = this;
+
+      this.$q.dialog({
+        title: this.generateText,
+        message: 'How many children do you want to generate (max 15).',
+        prompt: {
+          model: 'string',
+          type: 'number'
+        }
+      }).onOk(function (value) {
+        if (value > 15) {
+          _this3.$q.notify({
+            color: 'negative',
+            textColor: 'white',
+            icon: 'warning',
+            position: 'top',
+            message: 'Number of children must be less or equal to 15.'
+          });
+        } else {
+          axios.put('/factory/' + _this3.factory.id + '/children', {
+            numChildren: value
+          }).then(function (response) {
+            var data = {
+              factory: _this3.factory,
+              children: response.data
+            };
+
+            _this3.$emit('factoryChildren', data);
+          })["catch"](function (error) {
+            _this3.$q.notify({
+              color: 'negative',
+              textColor: 'white',
+              icon: 'warning',
+              position: 'top',
+              message: 'There was an error generating children for this factory.'
+            });
+          });
+        }
+      });
+    }
+  }
+});
 
 /***/ }),
 
@@ -3141,7 +3392,7 @@ var render = function() {
         [
           _c(
             "div",
-            { staticClass: "full-width" },
+            { staticClass: "full-width non-selectable" },
             [
               _vm._v("\n            root\n            "),
               _c(
@@ -3180,9 +3431,19 @@ var render = function() {
             1
           ),
           _vm._v(" "),
-          _c("factory")
+          _vm._l(_vm.factories, function(factory) {
+            return _c("factory", {
+              key: factory.id,
+              attrs: { factory: factory },
+              on: {
+                factoryUpdate: _vm.factoryUpdate,
+                factoryDelete: _vm.factoryDelete,
+                factoryChildren: _vm.factoryChildren
+              }
+            })
+          })
         ],
-        1
+        2
       ),
       _vm._v(" "),
       _c(
@@ -3290,13 +3551,15 @@ var render = function() {
                     { staticClass: "col-12 text-right" },
                     [
                       _c("q-btn", {
+                        directives: [
+                          { name: "close-popup", rawName: "v-close-popup" }
+                        ],
                         attrs: {
                           flat: "",
                           color: "primary",
                           label: "cancel",
                           title: "cancel"
-                        },
-                        on: { click: _vm.cancelFactory }
+                        }
                       }),
                       _vm._v(" "),
                       _c("q-btn", {
@@ -3344,18 +3607,13 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _vm._m(0)
-}
-var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "row q-pl-md" }, [
-      _c("div", { staticClass: "col-12" }, [_vm._v("\n        child 1\n    ")])
+  return _c("div", { staticClass: "row q-pl-md" }, [
+    _c("div", { staticClass: "col-12" }, [
+      _vm._v("\n        " + _vm._s(_vm.child.name) + "\n    ")
     ])
-  }
-]
+  ])
+}
+var staticRenderFns = []
 render._withStripped = true
 
 
@@ -3377,14 +3635,238 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c("div", { staticClass: "row q-pl-md" }, [
-    _c(
-      "div",
-      { staticClass: "col-12" },
-      [_vm._v("\n            factory 1\n            "), _c("child")],
-      1
-    )
-  ])
+  return _c(
+    "div",
+    { staticClass: "row q-pl-md" },
+    [
+      _c(
+        "div",
+        { staticClass: "col-12" },
+        [
+          _c(
+            "div",
+            { staticClass: "full-width non-selectable" },
+            [
+              _vm._v(
+                "\n            \t" +
+                  _vm._s(_vm.factory.name) +
+                  "\n            \t"
+              ),
+              _c(
+                "q-menu",
+                { attrs: { "context-menu": "" } },
+                [
+                  _c(
+                    "q-list",
+                    [
+                      _c(
+                        "q-item",
+                        {
+                          directives: [
+                            { name: "close-popup", rawName: "v-close-popup" }
+                          ],
+                          attrs: { clickable: "" },
+                          on: {
+                            click: function($event) {
+                              _vm.showFactoryEdit = true
+                            }
+                          }
+                        },
+                        [
+                          _vm._v(
+                            "\n                            Edit Factory\n                        "
+                          )
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "q-item",
+                        {
+                          directives: [
+                            { name: "close-popup", rawName: "v-close-popup" }
+                          ],
+                          attrs: { clickable: "" },
+                          on: { click: _vm.generateChildren }
+                        },
+                        [
+                          _vm._v(
+                            "\n                        \t" +
+                              _vm._s(_vm.generateText) +
+                              "\n                        "
+                          )
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "q-item",
+                        {
+                          directives: [
+                            { name: "close-popup", rawName: "v-close-popup" }
+                          ],
+                          attrs: { clickable: "" },
+                          on: { click: _vm.deleteFactory }
+                        },
+                        [
+                          _vm._v(
+                            "\n                        \tDelete Factory\n                        "
+                          )
+                        ]
+                      )
+                    ],
+                    1
+                  )
+                ],
+                1
+              )
+            ],
+            1
+          ),
+          _vm._v(" "),
+          _vm._l(_vm.children, function(child) {
+            return _c("child", { key: child.id, attrs: { child: child } })
+          })
+        ],
+        2
+      ),
+      _vm._v(" "),
+      _c(
+        "q-dialog",
+        {
+          on: { hide: _vm.cancelFactory },
+          model: {
+            value: _vm.showFactoryEdit,
+            callback: function($$v) {
+              _vm.showFactoryEdit = $$v
+            },
+            expression: "showFactoryEdit"
+          }
+        },
+        [
+          _c(
+            "q-card",
+            { staticClass: "dialog-card bg-white" },
+            [
+              _c("q-card-section", { staticClass: "q-pa-none" }, [
+                _c(
+                  "div",
+                  {
+                    staticClass:
+                      "row items-center text-h6 bg-grey-4 text-grey-9 q-pa-sm"
+                  },
+                  [
+                    _c("div", { staticClass: "col" }, [
+                      _vm._v(
+                        "\n                            New Factory\n                        "
+                      )
+                    ]),
+                    _vm._v(" "),
+                    _c(
+                      "div",
+                      { staticClass: "col-auto text-right" },
+                      [
+                        _c("q-btn", {
+                          directives: [
+                            { name: "close-popup", rawName: "v-close-popup" }
+                          ],
+                          attrs: {
+                            round: "",
+                            icon: "clear",
+                            title: "close",
+                            flat: ""
+                          }
+                        })
+                      ],
+                      1
+                    )
+                  ]
+                )
+              ]),
+              _vm._v(" "),
+              _c("q-card-section", [
+                _c("div", { staticClass: "row" }, [
+                  _c(
+                    "div",
+                    { staticClass: "col-12" },
+                    [
+                      _c("q-input", {
+                        attrs: { "stack-label": "", label: "title" },
+                        model: {
+                          value: _vm.newFactoryName,
+                          callback: function($$v) {
+                            _vm.newFactoryName = $$v
+                          },
+                          expression: "newFactoryName"
+                        }
+                      })
+                    ],
+                    1
+                  )
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "row" }, [
+                  _c(
+                    "div",
+                    { staticClass: "col-6 offset-3 q-pt-lg" },
+                    [
+                      _c("q-range", {
+                        attrs: {
+                          min: 0,
+                          max: 1000,
+                          "label-always": "",
+                          step: 1
+                        },
+                        model: {
+                          value: _vm.newFactoryRange,
+                          callback: function($$v) {
+                            _vm.newFactoryRange = $$v
+                          },
+                          expression: "newFactoryRange"
+                        }
+                      })
+                    ],
+                    1
+                  )
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "row q-pa-sm" }, [
+                  _c(
+                    "div",
+                    { staticClass: "col-12 text-right" },
+                    [
+                      _c("q-btn", {
+                        directives: [
+                          { name: "close-popup", rawName: "v-close-popup" }
+                        ],
+                        attrs: {
+                          flat: "",
+                          color: "primary",
+                          label: "cancel",
+                          title: "cancel"
+                        }
+                      }),
+                      _vm._v(" "),
+                      _c("q-btn", {
+                        attrs: {
+                          color: "primary",
+                          label: "save",
+                          title: "save"
+                        },
+                        on: { click: _vm.saveFactory }
+                      })
+                    ],
+                    1
+                  )
+                ])
+              ])
+            ],
+            1
+          )
+        ],
+        1
+      )
+    ],
+    1
+  )
 }
 var staticRenderFns = []
 render._withStripped = true
