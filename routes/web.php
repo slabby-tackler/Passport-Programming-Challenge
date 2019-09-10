@@ -11,6 +11,10 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', 'HomeController@index');
+
+Route::get('/factory', 'FactoryController@index');
+Route::post('/factory', 'FactoryController@store');
+Route::put('/factory/{id}/children', 'FactoryController@generateChildren');
+Route::put('/factory/{id}', 'FactoryController@update');
+Route::delete('/factory/{id}', 'FactoryController@destroy');
