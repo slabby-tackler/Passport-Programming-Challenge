@@ -127,7 +127,7 @@
 	                        textColor: 'white',
 	                        icon: 'check_circle',
 	                        position: 'top',
-	                        message: 'Factory successfully saved',
+	                        message: 'Factory successfully removed',
 	                    });
 					})
 					.catch(error => {

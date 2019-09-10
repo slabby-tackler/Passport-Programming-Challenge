@@ -68,6 +68,22 @@
             };
         },
         mounted() {
+            Echo.channel('factory')
+                .listen('FactoryCreate', e => {
+                    this.factories.push(e.factory);
+                })
+                .listen('FactoryUpdate', e => {
+                    this.factoryUpdate(e.factory);
+                })
+                .listen('FactoryDelete', e => {
+                    this.factoryDelete(e.factory);
+                });
+
+            Echo.channel('child')
+                .listen('ChildGenerate', e => {
+                    this.factoryChildren(e);
+                })
+
             console.log('app mounted.')
             axios.get('/factory')
             .then(response => {

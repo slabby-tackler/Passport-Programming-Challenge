@@ -7,6 +7,12 @@ use Illuminate\Http\Request;
 use App\Factory;
 use App\Child;
 
+use App\Events\FactoryCreate;
+use App\Events\FactoryUpdate;
+use App\Events\FactoryDelete;
+
+use App\Events\ChildGenerate;
+
 class FactoryController extends Controller
 {
     /**
@@ -52,6 +58,8 @@ class FactoryController extends Controller
 
         // this adds the children property before the factory is returned.
         $factory->children;
+
+        broadcast(new FactoryCreate($factory))->toOthers();
 
         return $factory;
     }
@@ -100,6 +108,8 @@ class FactoryController extends Controller
 
         $factory->save();
 
+        broadcast(new FactoryUpdate($factory))->toOthers();
+
         return $factory;
     }
 
@@ -114,6 +124,10 @@ class FactoryController extends Controller
         $factory = Factory::find($id);
         $factory->delete();
 
+        $factory->children()->delete();
+
+        broadcast(new FactoryDelete($factory))->toOthers();
+
         return $factory;
     }
 
@@ -126,7 +140,7 @@ class FactoryController extends Controller
         $factory = Factory::find($id);
 
         // remove the existing children
-        $currentChildren = $factory->children()->delete();
+        $factory->children()->delete();
 
         $childrenArray = [];
         for($i = 0; $i < $request->numChildren; $i++) {
@@ -137,6 +151,8 @@ class FactoryController extends Controller
 
             array_push($childrenArray, $child);
         }
+
+        broadcast(new ChildGenerate($factory, $childrenArray))->toOthers();
 
         return $childrenArray;
     }

@@ -1,25 +1,25 @@
 window.axios = require('axios');
 window.Vue = require('vue');
-// window.Pusher = require('pusher-js');
+window.Pusher = require('pusher-js');
 
 window.Quasar = require('quasar/dist/quasar.umd.min.js');
 
 require('quasar-extras/material-icons/material-icons.css');
 require('quasar/dist/quasar.min.css');
 
-// import Echo from 'laravel-echo'
+import Echo from 'laravel-echo'
 
 Vue.use(Quasar);
 
 let token = document.head.querySelector('meta[name="csrf-token"]');
 window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
 
-// window.Echo = new Echo({
-//     broadcaster: 'pusher',
-//     key: process.env.MIX_PUSHER_APP_KEY,
-//     cluster: process.env.MIX_PUSHER_APP_CLUSTER,
-//     encrypted: true
-// });
+window.Echo = new Echo({
+    broadcaster: 'pusher',
+    key: process.env.MIX_PUSHER_APP_KEY,
+    cluster: process.env.MIX_PUSHER_APP_CLUSTER,
+    encrypted: true
+});
 
 /**
  * The following block of code may be used to automatically register your
